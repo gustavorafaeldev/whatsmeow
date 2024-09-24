@@ -679,6 +679,15 @@ func (cli *Client) sendGroup(ctx context.Context, to, ownID types.JID, id types.
 		}
 
 		node.Content = append(node.GetChildren(), eventAttr)
+
+		var newContent []waBinary.Node
+		for _, child := range node.GetChildren() {
+			if child.Tag != "device-identity" {
+				newContent = append(newContent, child)
+			}
+		}
+
+		node.Content = newContent
 	}
 
 	start = time.Now()
