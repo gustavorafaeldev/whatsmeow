@@ -734,6 +734,8 @@ func getTypeFromMessage(msg *waProto.Message) string {
 		return "media"
 	case msg.Conversation != nil, msg.ExtendedTextMessage != nil, msg.ProtocolMessage != nil:
 		return "text"
+	case msg.EventMessage != nil:
+		return "event"
 	default:
 		return "text"
 	}
