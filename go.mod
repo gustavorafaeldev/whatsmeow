@@ -1,4 +1,5 @@
-module go.mau.fi/whatsmeow
+//module go.mau.fi/whatsmeow
+module github.com/gustavorafaeldev/whatsmeow
 
 go 1.21
 
