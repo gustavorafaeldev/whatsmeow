@@ -668,6 +668,19 @@ func (cli *Client) sendGroup(ctx context.Context, to, ownID types.JID, id types.
 	}
 	node.Content = append(node.GetChildren(), skMsg)
 
+	// TODO: Verificar se é do tipo event e adicionar um novo attr no content
+	if message.EventMessage != nil {
+		eventAttr := waBinary.Node{
+			Tag:     "meta",
+			Content: nil,
+			Attrs: waBinary.Attrs{
+				"event_type": "creation",
+			},
+		}
+
+		node.Content = append(node.GetChildren(), eventAttr)
+	}
+
 	start = time.Now()
 	data, err := cli.sendNodeAndGetData(*node)
 	timings.Send = time.Since(start)
