@@ -962,7 +962,7 @@ func (cli *Client) getMessageContent(baseNode waBinary.Node, message *waE2E.Mess
 				"type":      "pkmsg",
 				"mediatype": "list",
 			},
-			Content: proto.Marshal(message),
+			Content: proto.Marshal(message.ListMessage),
 		}
 
 		content = append(content, nodeList)
