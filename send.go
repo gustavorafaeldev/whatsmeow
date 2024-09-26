@@ -970,6 +970,10 @@ func (cli *Client) prepareMessageNode(ctx context.Context, to, ownID types.JID, 
 	if encMediaType := getMediaTypeFromMessage(message); dsmPlaintext != nil && encMediaType != "" {
 		encAttrs["mediatype"] = encMediaType
 	}
+
+	if message.ListMessage != nil {
+		msgType = "text"
+	}
 	attrs := waBinary.Attrs{
 		"id":   id,
 		"type": msgType,
