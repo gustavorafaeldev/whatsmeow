@@ -953,6 +953,21 @@ func (cli *Client) getMessageContent(baseNode waBinary.Node, message *waE2E.Mess
 			}},
 		})
 	}
+
+	if message.ListMessage != nil {
+		nodeList := waBinary.Node{
+			Tag: "enc",
+			Attrs: waBinary.Attrs{
+				"v":         "2",
+				"type":      "pkmsg",
+				"mediatype": "list",
+			},
+			Content: proto.Marshal(message),
+		}
+
+		content = append(content, nodeList)
+	}
+
 	return content
 }
 
@@ -971,9 +986,6 @@ func (cli *Client) prepareMessageNode(ctx context.Context, to, ownID types.JID, 
 		encAttrs["mediatype"] = encMediaType
 	}
 
-	if message.ListMessage != nil {
-		msgType = "text"
-	}
 	attrs := waBinary.Attrs{
 		"id":   id,
 		"type": msgType,
