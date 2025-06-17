@@ -11,6 +11,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	go.mau.fi/libsignal v0.2.0
 	go.mau.fi/util v0.8.8
+	go.mau.fi/whatsmeow v0.0.0-20250617170509-947866bb9f75
 	golang.org/x/crypto v0.39.0
 	golang.org/x/net v0.41.0
 	google.golang.org/protobuf v1.36.6
