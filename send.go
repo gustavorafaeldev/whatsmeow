@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gustavorafaeldev/whatsmeow/proto/waBotMetadata"
 	"github.com/rs/zerolog"
 	"go.mau.fi/libsignal/groups"
 	"go.mau.fi/libsignal/keys/prekey"
@@ -29,7 +30,6 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	waBinary "go.mau.fi/whatsmeow/binary"
-	"go.mau.fi/whatsmeow/proto/waBotMetadata"
 	"go.mau.fi/whatsmeow/proto/waCommon"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
@@ -954,7 +954,7 @@ func getButtonAttributes(msg *waE2E.Message) waBinary.Attrs {
 	case msg.ListMessage != nil:
 		return waBinary.Attrs{
 			"v":    "2",
-			"type": strings.ToLower(waE2E.ListMessage_ListType_name[int32(*waProto.ListMessage_PRODUCT_LIST.Enum())]),
+			"type": strings.ToLower(waE2E.ListMessage_ListType_name[int32(*waE2E.ListMessage_PRODUCT_LIST.Enum())]),
 		}
 	default:
 		return waBinary.Attrs{}
