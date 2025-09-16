@@ -250,8 +250,9 @@ func (cli *Client) handleAccountSyncNotification(ctx context.Context, node *waBi
 }
 
 func (cli *Client) handlePrivacyTokenNotification(ctx context.Context, node *waBinary.Node) {
-	ownID := cli.getOwnID().ToNonAD()
-	if ownID.IsEmpty() {
+	ownJID := cli.getOwnID().ToNonAD()
+	ownLID := cli.getOwnLID().ToNonAD()
+	if ownJID.IsEmpty() {
 		cli.Log.Debugf("Ignoring privacy token notification, session was deleted")
 		return
 	}
@@ -270,8 +271,11 @@ func (cli *Client) handlePrivacyTokenNotification(ctx context.Context, node *waB
 		ag := child.AttrGetter()
 		if child.Tag != "token" {
 			cli.Log.Warnf("privacy_token notification contained unexpected <%s> tag", child.Tag)
-		} else if targetUser := ag.JID("jid"); targetUser != ownID {
-			cli.Log.Warnf("privacy_token notification contained token for different user %s", targetUser)
+		} else if targetUser := ag.JID("jid"); targetUser != ownLID && targetUser != ownJID {
+			// Don't log about own privacy tokens for other users
+			if sender != ownJID && sender != ownLID {
+				cli.Log.Warnf("privacy_token notification contained token for different user %s", targetUser)
+			}
 		} else if tokenType := ag.String("type"); tokenType != "trusted_contact" {
 			cli.Log.Warnf("privacy_token notification contained unexpected token type %s", tokenType)
 		} else if token, ok := child.Content.([]byte); !ok {
@@ -426,10 +430,18 @@ func (cli *Client) handleNotification(node *waBinary.Node) {
 	case "fbid:devices":
 		cli.handleFBDeviceNotification(ctx, node)
 	case "w:gp2":
-		evt, err := cli.parseGroupNotification(node)
+		evt, lidPairs, redactedPhones, err := cli.parseGroupNotification(node)
 		if err != nil {
 			cli.Log.Errorf("Failed to parse group notification: %v", err)
 		} else {
+			err = cli.Store.LIDs.PutManyLIDMappings(ctx, lidPairs)
+			if err != nil {
+				cli.Log.Errorf("Failed to store LID mappings from group notification: %v", err)
+			}
+			err = cli.Store.Contacts.PutManyRedactedPhones(ctx, redactedPhones)
+			if err != nil {
+				cli.Log.Warnf("Failed to store redacted phones from group notification: %v", err)
+			}
 			cancelled = cli.dispatchEvent(evt)
 		}
 	case "picture":

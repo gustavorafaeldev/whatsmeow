@@ -28,11 +28,11 @@ import (
 	"go.mau.fi/libsignal/protocol"
 	"go.mau.fi/libsignal/session"
 	"go.mau.fi/libsignal/signalerror"
-	"go.mau.fi/util/ptr"
 	"go.mau.fi/util/random"
 	"google.golang.org/protobuf/proto"
 
 	waBinary "go.mau.fi/whatsmeow/binary"
+	"go.mau.fi/whatsmeow/proto/waBotMetadata"
 	"go.mau.fi/whatsmeow/proto/waCommon"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
@@ -241,7 +241,7 @@ func (cli *Client) SendMessage(ctx context.Context, to types.JID, message *waE2E
 
 	if isBotMode {
 		if message.MessageContextInfo.BotMetadata == nil {
-			message.MessageContextInfo.BotMetadata = &waE2E.BotMetadata{
+			message.MessageContextInfo.BotMetadata = &waBotMetadata.BotMetadata{
 				PersonaID: proto.String("867051314767696$760019659443059"),
 			}
 		}
@@ -299,10 +299,6 @@ func (cli *Client) SendMessage(ctx context.Context, to types.JID, message *waE2E
 			if cachedData.AddressingMode == types.AddressingModeLID {
 				ownID = cli.getOwnLID()
 				extraParams.addressingMode = types.AddressingModeLID
-				if req.Meta == nil {
-					req.Meta = &types.MsgMetaInfo{}
-				}
-				req.Meta.DeprecatedLIDSession = ptr.Ptr(false)
 			} else if cachedData.CommunityAnnouncementGroup && req.Meta != nil {
 				ownID = cli.getOwnLID()
 				// Why is this set to PN?
@@ -318,11 +314,6 @@ func (cli *Client) SendMessage(ctx context.Context, to types.JID, message *waE2E
 		resp.DebugTimings.GetParticipants = time.Since(start)
 	} else if to.Server == types.HiddenUserServer {
 		ownID = cli.getOwnLID()
-		extraParams.addressingMode = types.AddressingModeLID
-		// if req.Meta == nil {
-		// 	req.Meta = &types.MsgMetaInfo{}
-		// }
-		// req.Meta.DeprecatedLIDSession = ptr.Ptr(false)
 	}
 	if req.Meta != nil {
 		extraParams.metaNode = &waBinary.Node{
@@ -591,13 +582,17 @@ func ParseDisappearingTimerString(val string) (time.Duration, bool) {
 // and in groups the server will just reject the change. You can use the DisappearingTimer<Duration> constants for convenience.
 //
 // In groups, the server will echo the change as a notification, so it'll show up as a *events.GroupInfo update.
-func (cli *Client) SetDisappearingTimer(chat types.JID, timer time.Duration) (err error) {
+func (cli *Client) SetDisappearingTimer(chat types.JID, timer time.Duration, settingTS time.Time) (err error) {
 	switch chat.Server {
 	case types.DefaultUserServer, types.HiddenUserServer:
+		if settingTS.IsZero() {
+			settingTS = time.Now()
+		}
 		_, err = cli.SendMessage(context.TODO(), chat, &waE2E.Message{
 			ProtocolMessage: &waE2E.ProtocolMessage{
-				Type:                waE2E.ProtocolMessage_EPHEMERAL_SETTING.Enum(),
-				EphemeralExpiration: proto.Uint32(uint32(timer.Seconds())),
+				Type:                      waE2E.ProtocolMessage_EPHEMERAL_SETTING.Enum(),
+				EphemeralExpiration:       proto.Uint32(uint32(timer.Seconds())),
+				EphemeralSettingTimestamp: proto.Int64(settingTS.Unix()),
 			},
 		})
 	case types.GroupServer:
@@ -1199,7 +1194,7 @@ func (cli *Client) encryptMessageForDevices(
 	for _, jid := range allDevices {
 		plaintext := msgPlaintext
 		if (jid.User == ownJID.User || jid.User == ownLID.User) && dsmPlaintext != nil {
-			if jid == ownJID {
+			if jid == ownJID || jid == ownLID {
 				continue
 			}
 			plaintext = dsmPlaintext
