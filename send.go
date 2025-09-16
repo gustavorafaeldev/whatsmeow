@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gustavorafaeldev/whatsmeow/proto/waBotMetadata"
+	"go.mau.fi/whatsmeow/proto/waBotMetadata"
 	"github.com/rs/zerolog"
 	"go.mau.fi/libsignal/groups"
 	"go.mau.fi/libsignal/keys/prekey"
