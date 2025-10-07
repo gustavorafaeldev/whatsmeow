@@ -136,9 +136,6 @@ const (
 	mutationCreateNewsletterDesktop    = "27527996220149684"
 	mutationUnfollowNewsletterDesktop  = "8782612271820087"
 	mutationFollowNewsletterDesktop    = "8621797084555037"
-
-	// community settings
-	mutationUpdateCommunitySettings = "9418211574894172" // variables -> {group_id, update->{allow_non_admin_sub_group_creation}}
 )
 
 func convertQueryID(cli *Client, queryID string) string {
