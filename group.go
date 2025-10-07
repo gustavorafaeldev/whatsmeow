@@ -1054,16 +1054,13 @@ func (cli *Client) SetGroupDescription(jid types.JID, description string) error 
 
 // SetCommunitySubGroupCreationMode sets whether non-admins can create sub-groups in a community.
 func (cli *Client) SetCommunitySubGroupCreationMode(jid types.JID, allowNonAdmin bool) error {
-	modeStr := "admin_only"
-	if allowNonAdmin {
-		modeStr = "all_members"
+	variables := map[string]any{
+		"group_id": jid.String(),
+		"update": map[string]any{
+			"allow_non_admin_sub_group_creation": allowNonAdmin,
+		},
 	}
 
-	content := waBinary.Node{
-		Tag:     "default_sub_group_creation_mode",
-		Content: []byte(modeStr),
-	}
-
-	_, err := cli.sendGroupIQ(context.TODO(), iqSet, jid, content)
+	_, err := cli.sendMexIQ(context.TODO(), mutationUpdateCommunitySettings, variables)
 	return err
 }
