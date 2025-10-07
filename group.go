@@ -1053,17 +1053,15 @@ func (cli *Client) SetGroupDescription(jid types.JID, description string) error 
 }
 
 // SetCommunitySubGroupCreationMode sets whether non-admins can create sub-groups in a community.
+// This uses the MEX protocol (w:mex) instead of the traditional group protocol.
 func (cli *Client) SetCommunitySubGroupCreationMode(jid types.JID, allowNonAdmin bool) error {
-	tag := "disallow_non_admin_sub_group_creation"
-	if allowNonAdmin {
-		tag = "allow_non_admin_sub_group_creation"
+	variables := map[string]any{
+		"group_id": jid.String(),
+		"update": map[string]bool{
+			"allow_non_admin_sub_group_creation": allowNonAdmin,
+		},
 	}
 
-	content := waBinary.Node{
-		Tag:   tag,
-		Attrs: waBinary.Attrs{},
-	}
-
-	_, err := cli.sendGroupIQ(context.TODO(), iqSet, jid, content)
+	_, err := cli.sendMexIQ(context.TODO(), mutationUpdateCommunitySettings, variables)
 	return err
 }
