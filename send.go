@@ -672,7 +672,7 @@ func (cli *Client) sendNewsletter(
 		if message.PollUpdateMessage != nil {
 			pollType = "vote"
 		}
-		node.Content = append(node.Content, waBinary.Node{
+		node.Content = append(node.GetChildren(), waBinary.Node{
 			Tag: "meta",
 			Attrs: waBinary.Attrs{
 				"polltype": pollType,
