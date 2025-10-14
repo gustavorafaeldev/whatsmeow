@@ -276,7 +276,11 @@ func (cli *Client) handlePlaintextMessage(ctx context.Context, info *types.Messa
 			OriginalTS: meta.AttrGetter().UnixTime("original_msg_t"),
 		}
 	}
-	return cli.dispatchEvent(evt.UnwrapRaw())
+	handlerFailed = cli.dispatchEvent(evt.UnwrapRaw())
+	if !handlerFailed {
+		go cli.sendMessageReceipt(info)
+	}
+	return handlerFailed
 }
 
 func (cli *Client) migrateSessionStore(ctx context.Context, pn, lid types.JID) {
