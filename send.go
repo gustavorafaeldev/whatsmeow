@@ -666,6 +666,20 @@ func (cli *Client) sendNewsletter(
 		Attrs:   attrs,
 		Content: []waBinary.Node{plaintextNode},
 	}
+
+	if attrs["type"] == "poll" && message != nil {
+		pollType := "creation"
+		if message.PollUpdateMessage != nil {
+			pollType = "vote"
+		}
+		node.Content = append(node.Content, waBinary.Node{
+			Tag: "meta",
+			Attrs: waBinary.Attrs{
+				"polltype": pollType,
+			},
+		})
+	}
+
 	start = time.Now()
 	data, err := cli.sendNodeAndGetData(node)
 	timings.Send = time.Since(start)
