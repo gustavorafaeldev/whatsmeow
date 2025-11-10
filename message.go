@@ -287,7 +287,7 @@ func (cli *Client) handlePlaintextMessage(ctx context.Context, info *types.Messa
 	}
 	handlerFailed = cli.dispatchEvent(evt.UnwrapRaw())
 	if !handlerFailed {
-		go cli.sendMessageReceipt(info)
+		go cli.sendMessageReceipt(context.TODO(), info, node)
 	}
 	return handlerFailed
 }
