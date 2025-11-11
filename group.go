@@ -525,10 +525,12 @@ func (cli *Client) GetJoinedGroups(ctx context.Context) ([]*types.GroupInfo, err
 		allRedactedPhones = append(allRedactedPhones, redactedPhones...)
 		infos = append(infos, parsed)
 	}
+	/*
 	err = cli.Store.LIDs.PutManyLIDMappings(ctx, allLIDPairs)
 	if err != nil {
 		cli.Log.Warnf("Failed to store LID mappings from joined groups: %v", err)
 	}
+	*/
 	err = cli.Store.Contacts.PutManyRedactedPhones(ctx, allRedactedPhones)
 	if err != nil {
 		cli.Log.Warnf("Failed to store redacted phones from joined groups: %v", err)
